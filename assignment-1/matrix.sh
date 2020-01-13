@@ -96,7 +96,52 @@ mean()
 # add function
 add()
 {
-    echo add
+    if [ "`dims $1`" != "`dims $2`" ]
+    then
+        echo bad dims
+        # non-matching dimensions of args, exit
+        return 1
+    fi
+
+    rowvar=0
+
+    # read one file into columns from rows
+    while read myLine
+    do
+        for digit in $myLine
+        do
+            echo "$digit" >> "row$rowvar"
+        done
+        rowvar=`expr $rowvar + 1`
+    done < $1
+
+    rowvar=0
+
+    # fill sum file with each value
+    while read myLine
+    do
+        count=0
+
+        for digit in $myLine
+        do
+            digit2=$(cat "row$rowvar" | head -n $(expr $count + 1) | tail -n 1)
+            digitsum=$(expr $digit2 + $digit)
+
+            printf "$digitsum\t" >> "wow"
+
+            count=$(expr $count + 1)
+        done
+
+        printf "\n" >> "wow"
+        rowvar=`expr $rowvar + 1`
+    done < $2
+
+    # output result
+    cat wow
+
+    # remove tmp files
+    rm wow
+    rm row*
 }
 
 # multiply function

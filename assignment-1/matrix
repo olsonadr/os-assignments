@@ -1,0 +1,299 @@
+#!/bin/bash
+
+### supported functions
+# help function
+help()
+{
+    printf "[USAGE]\nmatrix\tdims\t\t[MATRIX]\nmatrix\ttranspose\t[MATRIX]"
+    printf "\nmatrix\tmean\t\t[MATRIX]\nmatrix\tadd\t\tMATRIX_LEFT\tMATRIX_RIGHT"
+    printf "\nmatrix\tmultiply\tMATRIX_LEFT\tMATRIX_RIGHT\n"
+}
+
+# dims function
+dims()
+{
+    local rows=0
+    local cols=0
+    local first=1
+
+    while read myLine
+    do
+        rows=$(expr $rows + 1)
+
+        myLine=$(echo -n "	""$myLine")
+
+        if [ "$first" == "1" ]
+        then
+            first=0
+            while [ ! -z "$myLine" ]
+            do
+                myLine=${myLine%[	]*}
+                cols=$(expr $cols + 1)
+            done
+        fi
+    done < $1
+
+    # echo result
+    echo "$rows" "$cols"
+}
+
+# transpose function
+transpose()
+{
+    row=0
+
+    # read file
+    while read myLine
+    do
+        for digit in $myLine
+        do
+            echo "$digit" | cat >> "$$col$row"
+        done
+
+        row=`expr $row + 1`
+    done < $1
+
+    # decrement row
+    row=`expr $row - 1`
+
+    # transpose
+    tmpcol=0
+    cols=`dims $1`
+    cols=${cols#*[ ]}
+
+   	while [ "$tmpcol" != "`expr $cols`" ]
+   	do
+        tmprow=0
+
+   	    while [ "$tmprow" != "`expr $row`" ]
+   	    do
+            cat "$$col$tmprow" | tail -n `expr $cols - $tmpcol` | head -n 1 | tr '\n' '\t' >> $$wow
+   	        tmprow=`expr $tmprow + 1`
+   	    done
+
+        # last digit of new row
+        cat "$$col$tmprow" | tail -n `expr $cols - $tmpcol` | head -n 1 >> $$wow
+        tmpcol=`expr $tmpcol + 1`
+    done
+
+    # output result
+    cat $$wow
+
+    # after transpose
+    rm "$$wow"
+    while [ "$row" != "-1" ]
+    do
+        rm "$$col$row"
+        row=`expr $row - 1`
+    done
+}
+
+# mean function
+mean()
+{
+    dims="$(dims "$1")"
+    cols="${dims#*[ ]}"
+    rows="${dims%[ ]*}"
+
+    for col in $(seq 1 $cols)
+    do
+        echo "0" > "$$col$col"
+    done
+
+    while read myLine
+    do
+        col=1
+        myLine=$(echo -n "$myLine""	")
+
+        while [ ! -z "$myLine" ]
+        do
+            expr $(echo -n "${myLine%%[	]*}") + $(echo -n "$(cat "$$col$col")") > "$$col$col"
+            myLine="${myLine#*[	]}"
+            col=$(expr $col + 1)
+        done
+    done < $1
+
+    # calculate and print means
+    for col in $(seq 1 $(expr $cols - 1))
+    do
+        total="$(echo -n "$(cat "$$col$col")")"
+        mean="$(expr \( $total + \( $rows / 2 \) \* \( \( $total \> 0 \) \* 2 - 1 \) \) / $rows)"
+        echo -n "$mean""	"
+    done
+
+    # print last mean
+    total="$(echo -n "$(cat "$$col$cols")")"
+    mean="$(expr \( $total + \( $rows / 2 \) \* \( \( $total \> 0 \) \* 2 - 1 \) \) / $rows)"
+    echo "$mean"
+}
+
+# add function
+add()
+{
+    # check dimensions match each
+    if [ "$(dims "$1")" != "$(dims "$2")" ]
+    then
+        echo bad dims >&2
+        # non-matching dimensions of args, exit 1
+        exit 1
+    fi
+
+    # store variables
+    dims=$(dims "$1")
+    rows=${dims%[ ]*}
+    rowvar=1
+
+    # for each row in both files
+    while [ "$rowvar" != "$(expr $rows + 1)" ]
+    do
+        rowsum=""
+        row1=$(echo -n "$(cat "$1" | head -n $rowvar | tail -n 1)""	")
+        row2=$(echo -n "$(cat "$2" | head -n $rowvar | tail -n 1)""	")
+
+        while [ ! -z "$row1" ] && [ "$row1" != "t" ]
+        do
+            digit1=$(echo -n "${row1%%[	]*}")
+            digit2=$(echo -n "${row2%%[	]*}")
+            digitsum=$(expr $digit1 + $digit2)
+            rowsum=$(echo -n "$rowsum""$digitsum""	")
+            row1=${row1#*[	]}
+            row2=${row2#*[	]}
+        done
+
+        echo "${rowsum%[	]}" >> $$wow
+        rowvar=$(expr $rowvar + 1)
+    done
+
+    # output result
+    cat "$$wow"
+
+    # cleanup files
+    rm "$$wow"
+}
+
+# multiply function
+multiply()
+{
+    # Get columns of first
+    dims1=$(dims $1)
+    cols1=${dims1#*[ ]}
+    rows1=${dims1%[ ]*}
+
+    # Get rows of second
+    dims2=$(dims $2)
+    cols2=${dims2#*[ ]}
+    rows2=${dims2%[ ]*}
+
+    # Check if correct dims for mult
+    if [ "$cols1" != "$rows2" ]
+    then
+        # Error, not correct dims for mult
+        echo "columns of first mat do not match rows of second" >&2
+        exit 1
+    fi
+
+    # Multiply them
+    # get transpose of second
+    transpose "$2" > "$$mat2"
+
+    for row in $(seq 1 $rows1)
+    do
+        for col in $(seq 1 $cols2)
+        do
+            # multiply row from first and col from second
+            dot=0
+
+            # get the row and col
+            rowLine=$(echo -n "$(cat "$1" | head -n $row | tail -n 1)""	")
+            colLine=$(echo -n "$(cat "$$mat2" | head -n $col | tail -n 1)""	")
+
+            # dot them
+            while [ ! -z "$rowLine" ]
+            do
+                dot=$(expr $dot + \( ${rowLine%%[	]*} \* ${colLine%%[	]*} \))
+                rowLine="${rowLine#*[	]}"
+                colLine="${colLine#*[	]}"
+            done
+
+            # print dot
+            if [ "$col" != "$cols2" ]
+            then
+                echo -n "$dot""	"
+            else
+                echo "$dot"
+            fi
+        done
+    done
+}
+
+
+### runtime code
+## argument error checking
+
+# first matrix
+filepath1="$$mat1"
+
+# second matrix
+filepath2="$$mat2"
+
+# whether 2, matrix operations should check stdin
+ena=0
+
+# check if first arg is a supported operation
+if [ "$1" != "help" ] && [ "$1" != "dims" ] && [ "$1" != "transpose" ] \
+    && [ "$1" != "mean" ] && [ "$1" != "add" ] && [ "$1" != "multiply" ]
+then
+    echo unsupported operation / arg error >&2
+    # error of unsupported operation or argument error, exit 1
+    exit 1
+
+# check if right number of args for operation
+elif [ "$1" == "dims" ] || [ "$1" == "transpose" ] || [ "$1" == "mean" ]
+then
+    if [ "$#" == "1" ]
+    then
+        cat > "$filepath1"
+    elif [ "$#" == "2" ]
+    then
+        if [[ ! -r $2 ]]
+        then
+	        echo not readable >&2
+	        # error of unreadable arguments for operation, exit 1
+            exit 1
+        else
+            filepath1=$2
+        fi
+    else
+	    echo wrong number of dims >&2
+	    # error of wrong number of arguments for operation, exit 1
+	    exit 1
+    fi
+
+elif [ "$1" == "add" ] || [ "$1" == "multiply" ]
+then
+    if [ "$ena" == "1" ] && [ "$#" == "1" ]
+    then
+        cat > "$filepath1"
+        cat > "$filepath2"
+    elif [ "$#" == "3" ]
+    then
+        if [[ ! -r $2 ]] || [[ ! -r $3 ]]
+        then
+	        echo not readable >&2
+	        # error of unreadable arguments for operation, exit 1
+            exit 1
+        else
+            filepath1=$2
+            filepath2=$3
+        fi
+    else
+	    echo wrong number of args >&2
+	    # error of wrong number of arguments for operation, exit 1
+	    exit 1
+    fi
+fi
+
+## pass to function listed by first argument
+trap "rm -f "$$*"; printf '\nError or CTRL+C received, exiting...\n'; exit 1" INT TERM HUP ERR
+trap "rm -f "$$*"" EXIT
+$1 $filepath1 $filepath2

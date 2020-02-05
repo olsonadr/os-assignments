@@ -6,13 +6,20 @@ FLAGS=-g3
 
 
 # special
-.PHONY: clean cleanall $(ONID).buildrooms
-default: $(ONID).buildrooms
-
+.PHONY: clean cleanexe cleanrooms build adventure buildrooms
+default: $(ONID).buildrooms $(ONID).adventure
 
 # easy
 buildrooms:	$(ONID).buildrooms
-adventure:	$(ONID).adventure
+adventure: $(ONID).adventure
+
+
+# helpful
+build: $(ONID).buildrooms $(ONID).adventure
+	./$(ONID).buildrooms
+
+start:
+	./$(ONID).adventure
 
 
 # specifics
@@ -24,8 +31,11 @@ $(ONID).adventure:	$(ONID).adventure.c
 
 
 # cleanup
-clean:
-	rm -f $(ONID).buildrooms
+clean: cleanexe cleanrooms
 
-cleanall: clean
+cleanexe:
+	rm -f $(ONID).buildrooms
+	rm -f $(ONID).adventure
+
+cleanrooms:
 	rm -f -r rooms*

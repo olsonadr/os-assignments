@@ -105,7 +105,7 @@ int main()
     int minCons     = 3;
     int maxCons     = 6;
     int typeLenMax  = 10;
-    int nameLenMax  = 8;
+    int nameLenMax  = 9;
     int numNames    = 10;
     
     // variables to come
@@ -120,8 +120,8 @@ int main()
     // create list of possible names
     char ** nameStart = malloc(numNames * sizeof(char*));
     for (i = 0; i < numNames; i++) { *(nameStart + i) =  malloc((nameLenMax) * sizeof(char)); }
-    char *names[] = {  "name1", "name2", "name3", "name4", "name5",
-                      "name6", "name7", "name8", "name9", "name10"  };
+    char *names[] = {  "Clearing", "Forest", "Cave", "Attic", "Kitchen",
+                      "Barrow", "Canyon", "Altar", "Temple", "Chasm"  };
     for (i = 0; i < numNames; i++) { sprintf(*(nameStart+i), "%s", names[i]); }
     currName = nameStart;
 

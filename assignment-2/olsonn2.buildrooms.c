@@ -189,7 +189,7 @@ int main()
     
     // generate directory path
     char outDir[80];
-    strcpy(outDir, "./rooms.");
+    strcpy(outDir, "./olsonn2.rooms.");
     strcat(outDir, pidStr);
 
     // make output directory

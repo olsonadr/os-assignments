@@ -76,14 +76,14 @@ void* time_check(void * arg)
     fp = fopen("currentTime.txt", "w+");
 
     // write time to file
-    fprintf(fp, " %s", time_buff);
+    fprintf(fp, "%s", time_buff);
     
     // move pointer to start of file
     rewind(fp);
 
     // print contents
     fgets(time_buff, sizeof(time_buff), fp);
-    printf("%s\n", time_buff);
+    printf(" %s\n", time_buff);
 
     // close file
     fclose(fp);
@@ -610,7 +610,7 @@ int main()
     struct game g;
     
     // rooms directory selection parameters
-    char regex_pattern[] = "^rooms\\..*$";
+    char regex_pattern[] = "^olsonn2\\.rooms\\..*$";
     char rooms_src_dir[] = ".";
 
     // get newest directory of rooms

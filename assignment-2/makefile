@@ -31,11 +31,14 @@ $(ONID).adventure:	$(ONID).adventure.c
 
 
 # cleanup
-clean: cleanexe cleanrooms
+clean: cleanexe cleanrooms cleantime
 
 cleanexe:
 	rm -f $(ONID).buildrooms
 	rm -f $(ONID).adventure
 
 cleanrooms:
-	rm -f -r rooms*
+	rm -f -r olsonn2.rooms*
+
+cleantime:
+	rm -f currentTime.txt

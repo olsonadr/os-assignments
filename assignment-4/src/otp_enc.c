@@ -10,7 +10,7 @@
 
 
 /*** definitions ***/
-#define BUFF_MAX 1000
+#define BUFF_MAX 100
 
 
 /*** prototypes ***/
@@ -61,6 +61,7 @@ int check_and_read_file(char * file_name, char *** buffers,
         {
             fprintf(stderr, "invalid char = \'%c\'\n", c);
             cleanup(buffers, num_buffs, buff_lens);
+            fclose(in_file);
             return 2;
         }
 
@@ -103,7 +104,7 @@ int check_and_read_file(char * file_name, char *** buffers,
 
     // add null-termination
     (*buffers)[(*num_buffs) - 1][(*buff_lens)[(*num_buffs) - 1]] = '\0';
-    // (*buff_lens)[(*num_buffs) - 1]++;
+    (*buff_lens)[(*num_buffs) - 1]++;
 
     // close file
     fclose(in_file);
@@ -235,13 +236,17 @@ int main(int argc, char ** argv)
                                  &num_key_buffs, &key_buff_lens);
 
     // Check key file errors
-    if (result == 1)      { e_error("Unable to open plaintext file!", 1); }
-    else if (result == 2) { e_error("Invalid character in plaintext!", 1); }
+    if (result != 0)
+    {
+        cleanup(&plain_buffers, &num_plain_buffs, &plain_buff_lens);
+        if (result == 1)      { e_error("Unable to open key file!", 1); }
+        else if (result == 2) { e_error("Invalid character in key!", 1); }
+    }
 
     // Check that sizes of messages are the same
     if (num_plain_buffs > num_key_buffs
         || ((num_plain_buffs == num_key_buffs)
-            && (plain_buff_lens[num_plain_buffs - 1] >= key_buff_lens[num_key_buffs - 1])))
+            && (plain_buff_lens[num_plain_buffs - 1] > key_buff_lens[num_key_buffs - 1])))
     {
         cleanup(&plain_buffers, &num_plain_buffs, &plain_buff_lens);
         cleanup(&key_buffers, &num_key_buffs, &key_buff_lens);
@@ -285,7 +290,7 @@ int main(int argc, char ** argv)
             send_message(socketFD, key_buffers[i], key_buff_lens[i]);
 
             // receive the encoded message (also confirmation for key)
-            receive_message(socketFD, enc_buff, BUFF_MAX - 1);
+            receive_message(socketFD, enc_buff, BUFF_MAX);
 
             // output (part of) encoded message
             printf(enc_buff);

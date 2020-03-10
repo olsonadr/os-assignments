@@ -8,6 +8,12 @@ rm -f otp_enc_d
 echo "rm -f otp_enc"
 rm -f otp_enc
 
+echo "rm -f otp_dec_d"
+rm -f otp_dec_d
+
+echo "rm -f otp_dec"
+rm -f otp_dec
+
 echo "rm -f keygen"
 rm -f keygen
 

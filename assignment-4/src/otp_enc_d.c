@@ -9,14 +9,13 @@
 
 
 /*** definitions ***/
-#define BUFF_MAX 1000
+#define BUFF_MAX 100
 #define MAX_CHILDREN 5
 
 
 /*** prototypes ***/
 int enc(char**, char*, char*);
 int start_listening(int);
-int spawn_child();
 int send_message(int, char*, int);
 int receive_message(int, char*, int);
 int main(int, char**);
@@ -51,9 +50,8 @@ int enc(char ** enc_buff, char * plain_buff, char * key_buff)
     int res;
     int i;
 
-    /* malloc enc_buff */
-    // (*enc_buff) = malloc((_buff_len(plain_buff) + 2) * sizeof(char));
-    memset((*enc_buff), '\0', BUFF_MAX);//_buff_len(plain_buff) + 2);
+    /* memset enc_buff */
+    memset((*enc_buff), '\0', BUFF_MAX);
 
     /* get key_len */
     key_len = _buff_len(key_buff);
@@ -62,7 +60,6 @@ int enc(char ** enc_buff, char * plain_buff, char * key_buff)
     for (i = 0; i < _buff_len(plain_buff); i++)
     {
         // get key index
-        // key_idx = i % key_len;
         key_idx = i;
 
         // get numerical value of plain text char
@@ -257,14 +254,12 @@ int main(int argc, char ** argv)
             {
                 // get section of plaintext (or end of message) from client
                 receive_message(establishedConnectionFD, plain_buff, BUFF_MAX);
-                // if (wow == 1) { printf("\nERROR\n"); printf(plain_buff); printf("\n\n"); }
 
                 // check for end of message communication
                 if (strstr(plain_buff, "# end of message") != NULL
                     || strcmp(plain_buff, "") == 0)
                 {
                     // communication is done
-                    // printf("end received in message \"%s\"\n", plain_buff);
                     is_correct_program = 0;
                     break;
                 }
@@ -283,11 +278,6 @@ int main(int argc, char ** argv)
 
                 // send encoded message back to client
                 send_message(establishedConnectionFD, enc_buff, BUFF_MAX);
-
-                // cleanup child memory
-                // free(plain_buff);
-                // free(key_buff);
-                // free(enc_buff
             }
 
             // stop child from looping

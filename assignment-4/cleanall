@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "Cleaning..."
+
+echo "rm -f otp_enc_d"
+rm -f otp_enc_d
+
+echo "rm -f otp_enc"
+rm -f otp_enc
+
+echo "rm -f keygen"
+rm -f keygen
+
+echo "Cleaned!"

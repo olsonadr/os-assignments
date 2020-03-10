@@ -2,7 +2,13 @@
 
 echo "Compiling..."
 
+echo "gcc -o otp_enc_d src/otp_enc_d.c -g"
 gcc -o otp_enc_d src/otp_enc_d.c -g
+
+echo "gcc -o otp_enc src/otp_enc.c -g"
+gcc -o otp_enc src/otp_enc.c -g
+
+echo "gcc -o keygen src/keygen.c -g"
 gcc -o keygen src/keygen.c -g
 
 echo "Compiled!"
